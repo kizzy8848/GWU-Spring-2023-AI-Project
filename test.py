@@ -22,7 +22,7 @@ class TestCalculator(unittest.TestCase):
         result = solver.A_star("input3.txt")
         self.assertEqual(result,-1)
 
-    def test02(self):
+    def test05(self):
         solver = Solver()
         result = solver.A_star("input4.txt")
         self.assertEqual(result,36)
