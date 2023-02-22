@@ -10,25 +10,21 @@ class TestCalculator(unittest.TestCase):
     def test02(self):
         solver = Solver()
         result = solver.A_star("input1.txt")
-        
         self.assertEqual(result,7)
 
     def test03(self):
         solver = Solver()
         result = solver.A_star("input2.txt")
-        
         self.assertEqual(result,-1)
 
     def test04(self):
         solver = Solver()
         result = solver.A_star("input3.txt")
-        
         self.assertEqual(result,-1)
 
     def test05(self):
         solver = Solver()
         result = solver.A_star("input4.txt")
-       
         self.assertEqual(result,36)
 
     

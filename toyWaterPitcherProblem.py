@@ -33,6 +33,8 @@ class Solver:
 
         # if gcd is not divisible by target, return -1
         # greatest common divisor 最大公约数
+        # 例如 2 4 凑个 11 target 11 与 2 4的最大公约数 2 的余数是 1 不是0
+        
         greates_common_divisor = self.capacities[0]
         for i in self.capacities:
             greates_common_divisor = math.gcd(greates_common_divisor, i)
@@ -50,11 +52,14 @@ class Solver:
         waters = [0 for _ in range(len(self.capacities))]
 
         heap = [(self.heuristicFunc(initial_state, max(self.capacities)), 0, self.heuristicFunc(
-            initial_state, max(self.capacities)), waters, initial_state, [])]
+            initial_state, max(self.capacities)), waters, initial_state)]
 
         while heap:
-            
-            f, g, h, curr_water, curr_state, curr_path = heapq.heappop(heap)
+
+            # curr_water 是每个罐子里现有的水
+            # curr_state 是无限水壶中现有的水
+
+            f, g, h, curr_water, curr_state = heapq.heappop(heap)
 
             # deque the answer, return
             if curr_state == self.target:
@@ -67,21 +72,22 @@ class Solver:
                 # if the new state is visited, just skip
                 if curr_state + self.capacities[i] in visited:
                     continue
+
                 new_water = curr_water[:]
-                if new_water[i]:
-                    new_water[i] = 0
-                    new_g = g + 1
+                if new_water[i]:  #如果水壶有水 清空
+                    new_water[i] = 0 
+                    new_g = g + 1 # 步数加一
                 else:
-                    new_g = g + 2
+                    new_g = g + 2 # 水壶装水 然后装到无限水壶
                 # calculate the new state related variables
-                new_path = curr_path[:]
-                new_path.append(self.capacities[i])
+
                 new_state = curr_state + self.capacities[i]
+                
                 new_h = self.heuristicFunc(new_state, max(self.capacities))
                 new_f = new_g + new_h
                 visited.add(new_state)
                 heapq.heappush(heap, (new_f, new_g, new_h,
-                                      new_water, new_state, new_path))
+                                      new_water, new_state))
 
             # pour the infinite one -> any water pitcher
             for i in range(len(self.capacities)):
@@ -97,15 +103,12 @@ class Solver:
                     new_water[i] = 1
                     new_g = g + 1
                 # calculate the new state related variables
-                new_path = curr_path[:]
-
-                new_path.append(-self.capacities[i])
                 new_state = curr_state - self.capacities[i]
                 new_h = self.heuristicFunc(new_state, max(self.capacities))
                 new_f = new_g + new_h
                 visited.add(new_state)
                 heapq.heappush(heap, (new_f, new_g, new_h,
-                                      new_water, new_state, new_path))
+                                      new_water, new_state))
 
         print('Search Failed')
         print("Returned -1")
