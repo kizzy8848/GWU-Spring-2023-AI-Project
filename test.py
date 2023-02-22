@@ -27,8 +27,6 @@ class TestCalculator(unittest.TestCase):
         result = solver.A_star("input4.txt")
         self.assertEqual(result,36)
 
-    
-
 
 if __name__ == '__main__':
     unittest.main()
