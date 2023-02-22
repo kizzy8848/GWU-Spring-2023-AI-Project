@@ -1,146 +1,115 @@
-import copy
-
-open_list = []
-closed_list = []
-
-
-class Node:
-    capacities = []
-
-    def __init__(self, state,  parent=None, g=0):
-        self.state = state  
-        self.parent = parent  
-        self.g = g # steps already taken 
-        if parent:
-            self.SetParent(parent)
-        self.h = self.GetH()
-        self.f = self.GetF()
-
-    def SetParent(self, parent):
-        self.parent = parent
-        self.g = parent.g + 1
-
-    def GetH(self):
-        remain = self.capacities[-1] - self.state[-1]  
-        m = remain  
-        
-        for x in self.state[:-1]:
-            t = abs(remain - x)
-            if t < m:
-                m = t
-
-        for x in self.capacities[:-1]:
-            for y in self.state[:-1]:
-                if x + y + self.state[-1] == self.capacities[-1]:
-                    m = 0
-        return m + remain
-
-   
-    def GetF(self):
-        return self.g * 1.6 + self.h
-
-
-
-def isExist(list, state):
-    for i in range(len(list)):
-        if list[i].state == state:
-            return i
-    return -1
-
-
-
-def update(node, state):
-    if isExist(closed_list, state) == -1:
-        key = isExist(open_list, state)
-        if key == -1:
-            open_list.append(Node(state, node))
-            open_list.sort(key=lambda element: element.f)
-        elif node.g + 1 < open_list[key].g:
-            open_list[key].parent = node.parent
-            open_list[key].g = node.g + 1
-
-
-def PrintPath(current_node):
-    optimal_path = []
-    while (current_node):
-        optimal_path.append(current_node.state)
-        current_node = current_node.parent
-    optimal_path.reverse()
-    print("The shortest path has %d nodes" % (len(optimal_path)-1))
-    print(optimal_path)
+import heapq
+import math
+import time
 
 
 class Solver:
+    capacities = []  # the capacity of each jug
+    target = 0  # the target
+
+    # calculate h(n)
+    def heuristicFunc(self, state, max_capacity):
+        # state is the current water in the infinited jug
+        remain = abs(self.target - state)
+        h = math.ceil(remain / max_capacity)
+        return h
+
     def A_star(self, filename):
+        # read data in file
         fo = open(filename, mode='r')
-        line = fo.readline()
-        if line[-1] == '\n':
-            line = line[:-1]
-        capacities = [int(c) for c in line.split(',')]
 
         line = fo.readline()
         if line[-1] == '\n':
             line = line[:-1]
-        capacities.append(int(line))
-        print(capacities)
+        self.capacities = [int(c) for c in line.split(',')]
+
+        line = fo.readline()
+        if line[-1] == '\n':
+            line = line[:-1]
+        self.target = int(line)
+        print(self.capacities)
+        print(self.target)
         fo.close()
 
-        Node.capacities = capacities  
-        open_list.clear()
-        closed_list.clear()
-        
-        open_list.append(Node([0]*len(capacities)))
+        # if gcd is not divisible by target, return -1
+        # greatest common divisor 最大公约数
+        greates_common_divisor = self.capacities[0]
+        for i in self.capacities:
+            greates_common_divisor = math.gcd(greates_common_divisor, i)
+        if self.target % greates_common_divisor != 0:
+            print('Gcd is not divisible by target')
+            print('Returned -1')
+            return -1
 
-        while (open_list != []):
+        initial_state = 0  # interger Initial State
+
+        visited = set()
+
+        visited.add(initial_state)
+
+        waters = [0 for _ in range(len(self.capacities))]
+
+        heap = [(self.heuristicFunc(initial_state, max(self.capacities)), 0, self.heuristicFunc(
+            initial_state, max(self.capacities)), waters, initial_state, [])]
+
+        while heap:
             
-            curr_node = open_list.pop(0)
-            if (curr_node.state[-1] == Node.capacities[-1]):
-                print("Successed!")
-                # PrintPath(curr_node)
-                return curr_node.g
+            f, g, h, curr_water, curr_state, curr_path = heapq.heappop(heap)
 
-           
-            closed_list.append(curr_node)
-            curr_state = curr_node.state
-            pitcher_nums = len(curr_state) - 1
-            
+            # deque the answer, return
+            if curr_state == self.target:
+                print("Search Successed")
+                print('Steps Taken', g)
+                return g
 
-            #  empty x
-            for i in range(pitcher_nums):
-                if curr_state[i] > 0:
-                    new_state = copy.deepcopy(curr_state)
-                    # new_state = copy.deepcopy(curr_state)
-                    new_state[i] = 0
-                    update(curr_node, new_state)
+            # pour any water pitcher -> the infinite one
+            for i in range(len(self.capacities)):
+                # if the new state is visited, just skip
+                if curr_state + self.capacities[i] in visited:
+                    continue
+                new_water = curr_water[:]
+                if new_water[i]:
+                    new_water[i] = 0
+                    new_g = g + 1
+                else:
+                    new_g = g + 2
+                # calculate the new state related variables
+                new_path = curr_path[:]
+                new_path.append(self.capacities[i])
+                new_state = curr_state + self.capacities[i]
+                new_h = self.heuristicFunc(new_state, max(self.capacities))
+                new_f = new_g + new_h
+                visited.add(new_state)
+                heapq.heappush(heap, (new_f, new_g, new_h,
+                                      new_water, new_state, new_path))
 
-            # pour x to y
-                    for j in range(pitcher_nums - 1):
-                        if j == i:
-                            break
-                        remain = Node.capacities[j] - curr_state[j]
-                        if remain > 0:
-                            new_state = copy.deepcopy(curr_state)
-                            if remain < curr_state[i]:
-                                new_state[i] = curr_state[i] - remain
-                                new_state[j] = Node.capacities[j]
-                            else:
-                                new_state[i] = 0
-                                new_state[j] += curr_state[i]
-                            update(curr_node, new_state)
+            # pour the infinite one -> any water pitcher
+            for i in range(len(self.capacities)):
+                # if the new state is invalid or visited, just skip
+                if curr_state - self.capacities[i] < 0:
+                    continue
+                if curr_state - self.capacities[i] in visited:
+                    continue
+                new_water = curr_water[:]
+                if new_water[i]:
+                    new_g = g + 2
+                else:
+                    new_water[i] = 1
+                    new_g = g + 1
+                # calculate the new state related variables
+                new_path = curr_path[:]
 
-            # pourx to infinite pitcher
-                    if curr_state[i] + curr_state[-1] <= Node.capacities[-1]:
-                        new_state = copy.deepcopy(curr_state)
-                        new_state[-1] += curr_state[i]
-                        new_state[i] = 0
-                        update(curr_node, new_state)
+                new_path.append(-self.capacities[i])
+                new_state = curr_state - self.capacities[i]
+                new_h = self.heuristicFunc(new_state, max(self.capacities))
+                new_f = new_g + new_h
+                visited.add(new_state)
+                heapq.heappush(heap, (new_f, new_g, new_h,
+                                      new_water, new_state, new_path))
 
-            # fill x
-                new_state = copy.deepcopy(curr_state)
-                new_state[i] = Node.capacities[i]
-                update(curr_node, new_state)
-        print("Failed")
-        return -1  # failed return -1
+        print('Search Failed')
+        print("Returned -1")
+        return -1
 
 
 if __name__ == '__main__':
