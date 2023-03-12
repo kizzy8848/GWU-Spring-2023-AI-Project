@@ -30,46 +30,40 @@ class GraphColoring:
             self.domains[node] = copy.deepcopy(self.domain)
 
     def backtracking(self, assignments, method):
-        # assignment的定义:dict index=color
-        # backTrack:通过递归，对assignment做尝试赋值并AC-3检查，保存副本（浪费空间，但是作为练习够用），失败则回复副本.
-        # domain:当前domain assignment:当前赋值位置 csp:问题描述(static)
-        # method:选择下一个变量采用的方法
-        if len(assignments) == len(self.domains):  # 如果所有节点均已赋值就表示找到了结果 直接返回
+        if len(assignments) == len(self.domains):
             return assignments, True
-
-        backupdomains = copy.deepcopy(self.domains)  # 备份domain
-        key = self.nextVariableIndex(assignments, method)  # 通过启发式 确定下一个要赋值的节点
+        backupdomains = copy.deepcopy(self.domains)
+        key = self.nextVariableIndex(assignments, method)
         for val in self.domains[key]:
-            assignments[key] = val  # assignment 记录
-            self.domains[key] = [val]  # 把domain更新为只有复制
+            assignments[key] = val
+            self.domains[key] = [val]
             if self.AC3():  # ac3
                 result, b = self.backtracking(assignments, method)
                 if b:
                     return result, b
-            # 运行到这里说明此路不通,回复状态,删掉val=value from domain
 
             self.domains = copy.deepcopy(backupdomains)
             self.domains[key].remove(val)
             del assignments[key]
-        # 运行到这里说明全都不行
+
         return assignments, False
 
     def nextVariableIndex(self, assignments, method):
-        # 这里实现两种方式，MRV与自然序
+
         if method == 'natural':
             for key in self.graph:
                 if assignments.get(key) == None:
                     return key
 
         if method == 'MRV':
-            # MRV:find the variable that has the smallest domain
+
             min = sys.maxsize
             min_node: int
-            for node in self.domains.keys():
-                # min remaining values
+            for node in self.domains:
+
                 if len(self.domains[node]) < min and assignments.get(node) == None:
                     min_node = node
-                # tie breaking rule
+
                 elif len(self.domains[node]) == min and assignments.get(node) == None:
                     if len(self.graph[node]) > len(self.graph[min_node]):
                         min_node = node
@@ -77,11 +71,10 @@ class GraphColoring:
 
     def AC3(self):
         queue = copy.deepcopy(self.edges)
-        # loop
-        while (len(queue) != 0):
 
-            edge = queue.pop()  # 一条边
-            # 一次梳理一对
+        while (len(queue) != 0):
+            edge = queue.pop()
+
             for c in range(2):
                 if c == 1:
                     edge = [edge[1], edge[0]]
@@ -96,9 +89,8 @@ class GraphColoring:
         x = self.domains[edge[0]]
         y = self.domains[edge[1]]
         flag = False
-        if len(y) > 1:  # 如果y的可能去值大于2 说明y还没确定 return
+        if len(y) > 1:
             return False
-        # y cannot be 0.
         for i in x:
             if i == y[0]:
                 x.remove(i)
