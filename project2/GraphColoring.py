@@ -41,7 +41,6 @@ class GraphColoring:
                 result, b = self.backtracking(assignments, method)
                 if b:
                     return result, b
-
             self.domains = copy.deepcopy(backupdomains)
             self.domains[key].remove(val)
             del assignments[key]
@@ -100,6 +99,12 @@ class GraphColoring:
 
 if __name__ == '__main__':
     graphColoring = GraphColoring()
-    graphColoring.read_file('project2/input7.txt')
+    graphColoring.read_file('project2/input.txt')
     assignments, is_have_solution = graphColoring.backtracking({}, 'MRV')
-    print(assignments)
+    if assignments:
+        print("Successed")
+        for key in assignments.keys().__reversed__(): 
+            print('Node',key,':',assignments[key])
+    else:
+        print("Failed")
+    

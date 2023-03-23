@@ -110,7 +110,7 @@ class Solver:
         return -1
 
 if __name__ == '__main__':
-    capacities, target = read_file("input6.txt")
+    capacities, target = read_file("project1/input1.txt")
     solver = Solver(capacities,target)
     steps = solver.A_star()
     print(steps)
