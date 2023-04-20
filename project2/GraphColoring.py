@@ -99,7 +99,7 @@ class GraphColoring:
 
 if __name__ == '__main__':
     graphColoring = GraphColoring()
-    graphColoring.read_file('project2/input.txt')
+    graphColoring.read_file('input8.txt')
     assignments, is_have_solution = graphColoring.backtracking({}, 'MRV')
     if assignments:
         print("Successed")
